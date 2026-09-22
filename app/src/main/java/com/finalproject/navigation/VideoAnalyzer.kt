@@ -4,6 +4,7 @@ import android.content.Context
 import android.graphics.Bitmap
 import android.media.MediaMetadataRetriever
 import android.net.Uri
+import java.util.Locale
 
 data class VideoDetectionResult(
     val timestampMs: Long,
@@ -11,7 +12,10 @@ data class VideoDetectionResult(
     val estimateDistanceMeter: Float
 )
 
-class VideoAnalyzer(private val context: Context, private val detector: YoloDetector) {
+class VideoAnalyzer(
+    private val context: Context,
+    private val detector: YoloDetector
+) {
 
     fun analyzeVideo(videoUri: Uri, intervalSeconds: Float = 1.0f): List<VideoDetectionResult> {
         val results = mutableListOf<VideoDetectionResult>()
@@ -36,6 +40,7 @@ class VideoAnalyzer(private val context: Context, private val detector: YoloDete
 
                     for (box in detectedBoxes) {
                         val distance = estimateDistance(box, bitmap.height)
+                        box.distanceMeter = distance
                         results.add(VideoDetectionResult(currentMs, box, distance))
                     }
                 }
@@ -45,23 +50,27 @@ class VideoAnalyzer(private val context: Context, private val detector: YoloDete
         } catch (e: Exception) {
             e.printStackTrace()
         } finally {
-            retriever.release()
+            try {
+                retriever.release()
+            } catch (e: Exception) {
+                e.printStackTrace()
+            }
         }
 
         return results
     }
 
     private fun estimateDistance(box: BoundingBox, frameHeight: Int): Float {
-        // 객체 바운딩 박스 높이(px) 계산
-        val boxHeightPx = kotlin.math.abs(box.y2 - box.y1)
+        val boxHeightPx = box.h
         if (boxHeightPx <= 0f) return -1f
 
-        val realObjectHeightMeter = when (box.cls) {
-            0 -> 1.7f   // person
-            1 -> 1.0f   // bicycle
-            2 -> 1.5f   // car
-            5 -> 3.2f   // bus
-            56 -> 0.9f  // chair
+        val realObjectHeightMeter = when (box.clsName.lowercase(Locale.ROOT)) {
+            "person", "사람" -> 1.7f
+            "bicycle", "자전거" -> 1.0f
+            "car", "차량" -> 1.5f
+            "bus", "버스" -> 3.2f
+            "chair", "의자" -> 0.9f
+            "bollard", "볼라드" -> 0.8f
             else -> 1.0f
         }
 

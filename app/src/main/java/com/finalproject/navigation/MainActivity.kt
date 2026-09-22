@@ -16,7 +16,7 @@ import androidx.camera.lifecycle.ProcessCameraProvider
 import androidx.core.app.ActivityCompat
 import androidx.core.content.ContextCompat
 import com.finalproject.navigation.databinding.ActivityMainBinding
-import com.finalproject.navigation.BoundingBox
+import java.util.Locale
 import java.util.concurrent.ExecutorService
 import java.util.concurrent.Executors
 
@@ -24,9 +24,9 @@ class MainActivity : AppCompatActivity() {
 
     private lateinit var binding: ActivityMainBinding
     private lateinit var yoloDetector: YoloDetector
-    private lateinit var videoAnalyzer: VideoAnalyzer
     private lateinit var feedbackManager: FeedbackManager
     private lateinit var cameraExecutor: ExecutorService
+    private lateinit var videoAnalyzer: VideoAnalyzer
 
     companion object {
         private const val REQUEST_CODE_PERMISSIONS = 10
@@ -50,21 +50,10 @@ class MainActivity : AppCompatActivity() {
         binding = ActivityMainBinding.inflate(layoutInflater)
         setContentView(binding.root)
 
+        yoloDetector = YoloDetector(this)
         feedbackManager = FeedbackManager(this)
-        cameraExecutor = Executors.newSingleThreadExecutor()
-
-        yoloDetector = YoloDetector(this, "yolov8n.onnx") { detectedBoxes ->
-            runOnUiThread {
-                // OverlayView에 감지된 BoundingBox 전달
-                binding.overlayView.setResults(detectedBoxes)
-
-                // viewFinder 너비 기준 위치(좌/전방/우) 판단 및 피드백 처리
-                val viewWidth = binding.viewFinder.width
-                feedbackManager.processDetections(detectedBoxes, viewWidth)
-            }
-        }
-
         videoAnalyzer = VideoAnalyzer(this, yoloDetector)
+        cameraExecutor = Executors.newSingleThreadExecutor()
 
         if (allPermissionsGranted()) {
             startCamera()
@@ -81,7 +70,6 @@ class MainActivity : AppCompatActivity() {
         cameraProviderFuture.addListener({
             val cameraProvider: ProcessCameraProvider = cameraProviderFuture.get()
 
-            // Preview
             val preview = Preview.Builder()
                 .build()
                 .also {
@@ -94,12 +82,22 @@ class MainActivity : AppCompatActivity() {
                 .also {
                     it.setAnalyzer(cameraExecutor) { imageProxy ->
                         val results = yoloDetector.detect(imageProxy)
+                        val rotationDegrees = imageProxy.imageInfo.rotationDegrees
+                        val isRotated = rotationDegrees == 90 || rotationDegrees == 270
+                        val imgWidth = if (isRotated) imageProxy.height else imageProxy.width
+                        val imgHeight = if (isRotated) imageProxy.width else imageProxy.height
 
                         runOnUiThread {
-                            binding.overlayView.setResults(results, yoloDetector.labels)
+                            binding.overlayView.setResults(
+                                boundingBoxes = results,
+                                labelArray = yoloDetector.labels,
+                                imgWidth = imgWidth,
+                                imgHeight = imgHeight
+                            )
 
-                            val screenWidth = resources.displayMetrics.widthPixels
-                            feedbackManager.processFeedback(results, screenWidth)
+                            val viewWidth = binding.viewFinder.width
+                            val viewHeight = binding.viewFinder.height
+                            feedbackManager.processDetections(results, viewWidth, viewHeight)
                         }
 
                         imageProxy.close()
@@ -140,10 +138,10 @@ class MainActivity : AppCompatActivity() {
                 ).show()
 
                 for (res in videoResults) {
-                    val label = yoloDetector.labels.getOrNull(res.box.cls) ?: "Unknown"
+                    val label = res.box.clsName.ifBlank { "Unknown" }
                     Log.d(
                         TAG,
-                        "Timestamp: ${res.timestampMs}ms | 객체: $label | 거리: ${String.format("%.2f", res.estimateDistanceMeter)}m"
+                        "Timestamp: ${res.timestampMs}ms | 객체: $label | 거리: ${String.format(Locale.KOREAN, "%.2f", res.estimateDistanceMeter)}m"
                     )
                 }
             }

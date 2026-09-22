@@ -21,8 +21,9 @@ class FeedbackManager(private val context: Context) : TextToSpeech.OnInitListene
         context.getSystemService(Context.VIBRATOR_SERVICE) as? Vibrator
     }
 
-    private var lastFeedbackTime = 0L
+    private var lastSpokenTime = 0L
     private val speechIntervalMs = 2500L
+
     private var lastVibratedTime = 0L
     private val vibrateIntervalMs = 1000L
 
@@ -39,18 +40,18 @@ class FeedbackManager(private val context: Context) : TextToSpeech.OnInitListene
         }
     }
 
-    fun processDetections(boxes: List<BoundingBox>, viewWidth: Int) {
+    fun processDetections(boxes: List<BoundingBox>, viewWidth: Int, viewHeight: Int = 0) {
         if (boxes.isEmpty()) return
 
         val now = System.currentTimeMillis()
 
         if (now - lastSpokenTime < speechIntervalMs) return
 
-        val validBoxes = boxes.filter { it.distanceMeter > 0f }
+        val validBoxes = boxes.filter { it.distanceMeter in 0.1f..5.0f }
         val primaryTarget = if (validBoxes.isNotEmpty()) {
             validBoxes.minByOrNull { it.distanceMeter }
         } else {
-            boxes.maxByOrNull { it.w * it.h }
+            boxes.filter { it.w > 0f && it.h > 0f }.maxByOrNull { it.w * it.h }
         } ?: return
 
         val distance = primaryTarget.distanceMeter
@@ -58,14 +59,14 @@ class FeedbackManager(private val context: Context) : TextToSpeech.OnInitListene
         val classNameKr = getKoreanClassName(primaryTarget.clsName)
 
         val speechMessage = if (distance > 0f) {
-            String.format(Locale.KOREAN, "%s %.1미터 앞 %s", positionText, distance, classNameKr)
+            String.format(Locale.KOREAN, "%s %.1f미터 앞 %s", positionText, distance, classNameKr)
         } else {
             "$positionText $classNameKr"
         }
 
         triggerVibration(distance)
-
         speak(speechMessage)
+
         lastSpokenTime = now
     }
 
@@ -81,45 +82,28 @@ class FeedbackManager(private val context: Context) : TextToSpeech.OnInitListene
         }
     }
 
-
-
-    fun processFeedback(boxes: List<BoundingBox>, screenWidth: Int) {
-        val currentTime = System.currentTimeMillis()
-        if (currentTime - lastFeedbackTime < feedbackInterval) return
-
-        val targetBox = boxes
-            .filter { it.distanceMeter > 0f }
-            .minByOrNull { it.distanceMeter } ?: return
-
-        val distance = targetBox.distanceMeter
-
-        if (distance > 5.0f) return
-
-        val direction = when {
-            targetBox.cx < screenWidth * 0.3f -> "좌측"
-            targetBox.cx > screenWidth * 0.7f -> "우측"
-            else -> "전방"
-        }
-
-        val label = getKoreanLabel(targetBox.clsName)
-        val distanceText = String.format(Locale.KOREA, "%.1f미터", distance)
-        val message = "$direction $distanceText 앞 $label"
-
-        speakText(message)
-        triggerVibration(distance)
-
-        lastFeedbackTime = currentTime
-    }
-
-    private fun speakText(text: String) {
-        if (isTtsReady) {
-            tts?.speak(text, TextToSpeech.QUEUE_FLUSH, null, "NavigationTTS")
+    private fun getKoreanClassName(clsName: String): String {
+        return when (clsName.lowercase(Locale.ROOT)) {
+            "person" -> "사람"
+            "car" -> "차량"
+            "chair" -> "의자"
+            "table" -> "탁자"
+            "bicycle" -> "자전거"
+            "motorcycle" -> "오토바이"
+            "bollard" -> "볼라드"
+            "stair", "stairs" -> "계단"
+            "door" -> "문"
+            "pole" -> "전주"
+            else -> if (clsName.isNotBlank()) clsName else "장애물"
         }
     }
 
     private fun triggerVibration(distanceMeter: Float) {
         val vib = vibrator ?: return
         if (!vib.hasVibrator()) return
+
+        val now = System.currentTimeMillis()
+        if (now - lastVibratedTime < vibrateIntervalMs) return
 
         if (Build.VERSION.SDK_INT >= Build.VERSION_CODES.O) {
             val effect = when {
@@ -143,42 +127,12 @@ class FeedbackManager(private val context: Context) : TextToSpeech.OnInitListene
                 else -> vib.vibrate(100)
             }
         }
+        lastVibratedTime = now
     }
 
     private fun speak(text: String) {
         if (isTtsReady) {
             tts?.speak(text, TextToSpeech.QUEUE_FLUSH, null, "ObstacleGuidance")
-        }
-    }
-
-    private fun triggerGuideVibration() {
-        val vib = vibrator ?: return
-        if (!vib.hasVibrator()) return
-
-        val pattern = longArrayOf(0, 80, 80, 80)
-
-        if (Build.VERSION.SDK_INT >= Build.VERSION_CODES.O) {
-            val effect = VibrationEffect.createWaveform(pattern, -1)
-            vib.vibrate(effect)
-        } else {
-            @Suppress("DEPRECATION")
-            vib.vibrate(pattern, -1)
-        }
-    }
-
-    private fun getKoreanLabel(clsName: String): String {
-        return when (clsName.lowercase(Locale.ROOT)) {
-            "person" -> "사람"
-            "car" -> "차량"
-            "chair" -> "의자"
-            "table" -> "탁자"
-            "bicycle" -> "자전거"
-            "motorcycle" -> "오토바이"
-            "bollard" -> "볼라드"
-            "stair", "stairs" -> "계단"
-            "door" -> "문"
-            "pole" -> "전주"
-            else -> if (clsName.isNotBlank()) clsName else "장애물"
         }
     }
 
