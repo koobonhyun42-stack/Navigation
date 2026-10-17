@@ -8,7 +8,7 @@ import android.graphics.RectF
 import android.util.AttributeSet
 import android.view.View
 
-class OverlayView(context: Context, attrs: AttributeSet?) : View(context, attrs) {
+class OverlayView @JvmOverloads constructor (context: Context, attrs: AttributeSet? = null, defStyleAttr: Int = 0) : View(context, attrs) {
 
     private var results: List<BoundingBox> = emptyList()
     private var labels = emptyArray<String>()
@@ -31,7 +31,9 @@ class OverlayView(context: Context, attrs: AttributeSet?) : View(context, attrs)
 
     private val textPaint = Paint().apply {
         color = Color.WHITE
-        textSize = 38f
+        textSize = 40f
+        style = Paint.Style.FILL
+        setShadowLayer(4f, 0f, 0f, Color.BLACK)
         isAntiAlias = true
     }
 
