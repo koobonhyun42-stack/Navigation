@@ -15,8 +15,7 @@ data class Feature(
     @SerializedName("geometry")
     val geometry: Geometry?,
     @SerializedName("properties")
-    val properties: Properties?,
-    val totalDistance: Any
+    val properties: Properties?
 )
 
 data class Geometry (
@@ -29,7 +28,7 @@ data class Geometry (
 data class Properties(
     @SerializedName("totalDistance") val totalDistance: Int?,
     @SerializedName("totalTime") val totalTime: Int?,
-    @SerializedName("index") val index: Int,
+    @SerializedName("index") val index: Int?,
     @SerializedName("name") val name: String?,
     @SerializedName("description") val description: String?,
     @SerializedName("turnType") val turnType: Int?,

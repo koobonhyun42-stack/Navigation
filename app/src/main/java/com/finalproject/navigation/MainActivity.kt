@@ -5,7 +5,9 @@ import android.content.Intent
 import android.content.pm.PackageManager
 import android.net.Uri
 import android.os.Bundle
+import android.speech.RecognizerIntent
 import android.util.Log
+import android.view.MotionEvent
 import android.widget.Button
 import android.widget.Toast
 import androidx.activity.result.contract.ActivityResultContracts
@@ -38,6 +40,9 @@ class MainActivity : AppCompatActivity() {
     private var isDetectionActive = true
     private var isPowerSaveMode = false
 
+    private var lastTapTime = 0L
+    private var tapCount = 0
+
     private val requiredPermissions = arrayOf(
         Manifest.permission.CAMERA,
         Manifest.permission.RECORD_AUDIO,
@@ -65,6 +70,19 @@ class MainActivity : AppCompatActivity() {
             val videoUri: Uri? = result.data?.data
             videoUri?.let { uri ->
                 analyzeSelectedVideo(uri)
+            }
+        }
+    }
+
+    private val speechRecognizerLauncher = registerForActivityResult(
+        ActivityResultContracts.StartActivityForResult()
+    ) { result ->
+        if (result.resultCode == RESULT_OK) {
+            val matches = result.data?.getStringArrayListExtra(RecognizerIntent.EXTRA_RESULTS)
+            val spokenText = matches?.firstOrNull()?.lowercase() ?: ""
+            Log.d(TAG, "인식된 목적지: $spokenText")
+            if (spokenText.isNotBlank()) {
+                handleSpokenDestination(spokenText)
             }
         }
     }
@@ -104,6 +122,8 @@ class MainActivity : AppCompatActivity() {
             }
         }
 
+        voiceCommandManager.startListening()
+
         powerSaveManager = PowerSaveManager(this) { powerSave ->
             isPowerSaveMode = powerSave
             runOnUiThread {
@@ -113,6 +133,28 @@ class MainActivity : AppCompatActivity() {
                     binding.tvStatus.text = "시스템 상태: ACTIVE (정상 탐지)"
                 }
             }
+        }
+
+        binding.root.setOnTouchListener { _, event ->
+            if (event.action == MotionEvent.ACTION_DOWN) {
+                val currentTime = System.currentTimeMillis()
+                if (currentTime - lastTapTime < 500) {
+                    tapCount++
+                } else {
+                    tapCount = 1
+                }
+                lastTapTime = currentTime
+
+                if (tapCount == 3) {
+                    tapCount = 0
+
+                    feedbackManager.speak("목적지를 말씀해 주세요.")
+                    startDestinationRecognition()
+
+                    return@setOnTouchListener true
+                }
+            }
+            false
         }
 
         val btnTest = findViewById<Button>(R.id.btnTestTMap)
@@ -128,6 +170,7 @@ class MainActivity : AppCompatActivity() {
         testTMapConnection()
         checkAndRequestPermissions()
     }
+
     private fun testTMapConnection() {
         val retrofit = Retrofit.Builder()
             .baseUrl("https://apis.openapi.sk.com/")
@@ -171,6 +214,7 @@ class MainActivity : AppCompatActivity() {
             initFeatures()
         }
     }
+
     private fun initFeatures() {
         startCamera()
         powerSaveManager.start()
@@ -232,6 +276,74 @@ class MainActivity : AppCompatActivity() {
                 Log.e(TAG, "Camera binding failed", exc)
             }
         }, ContextCompat.getMainExecutor(this))
+    }
+
+    private fun startDestinationRecognition() {
+        val intent = Intent(RecognizerIntent.ACTION_RECOGNIZE_SPEECH).apply {
+            putExtra(RecognizerIntent.EXTRA_LANGUAGE_MODEL, RecognizerIntent.LANGUAGE_MODEL_FREE_FORM)
+            putExtra(RecognizerIntent.EXTRA_LANGUAGE, "ko-KR")
+            putExtra(RecognizerIntent.EXTRA_PROMPT, "목적지를 말씀해 주세요")
+        }
+        try {
+            speechRecognizerLauncher.launch(intent)
+        } catch (e: Exception) {
+            Log.e(TAG, "음성 인식 시작 실패", e)
+        }
+    }
+
+    private fun handleSpokenDestination(destinationText: String) {
+        feedbackManager.speak("${destinationText}로 경로를 검색합니다.")
+
+        val (endLat, endLng) = when {
+            destinationText.contains("도서관") -> Pair(37.5560, 126.9720)
+            destinationText.contains("정문") -> Pair(37.5550, 126.9700)
+            else -> {
+                feedbackManager.speak("등록되지 않은 목적지입니다. 다시 시도해 주세요.")
+                return
+            }
+        }
+
+        val startLat = 37.5665
+        val startLng = 126.9780
+
+        val retrofit = Retrofit.Builder()
+            .baseUrl("https://apis.openapi.sk.com/")
+            .addConverterFactory(GsonConverterFactory.create())
+            .build()
+
+        val service = retrofit.create(TMapApiService::class.java)
+
+        lifecycleScope.launch(Dispatchers.IO) {
+            try {
+                val response = service.getPedestrianRoute(
+                    appKey = "yPDwRxoi5d2x5zYsGinmf3LWrVPMcegB9KxGbsJK",
+                    startX = startLng,
+                    startY = startLat,
+                    endX = endLng,
+                    endY = endLat
+                )
+
+                val firstFeature = response.features?.firstOrNull()
+                val distance = firstFeature?.properties?.totalDistance ?: 0
+                val time = firstFeature?.properties?.totalTime ?: 0
+
+                val message = String.format(
+                    Locale.KOREAN,
+                    "목적지까지 총 거리 %d미터, 예상 소요 시간 %d분입니다.",
+                    distance,
+                    time / 60
+                )
+
+                runOnUiThread {
+                    feedbackManager.speak(message)
+                }
+            } catch (e: Exception) {
+                Log.e(TAG, "경로 요청 실해: ${e.message}")
+                runOnUiThread {
+                    feedbackManager.speak("경로를 불러오는 데 실패했습니다.")
+                }
+            }
+        }
     }
 
     fun openVideoPicker() {

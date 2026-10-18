@@ -67,6 +67,14 @@ class VoiceCommandManager (
             isListening = false
         }
 
+        private fun startDestinationRecognition() {
+            val intent = Intent(RecognizerIntent.ACTION_RECOGNIZE_SPEECH).apply{
+                putExtra(RecognizerIntent.EXTRA_LANGUAGE_MODEL, RecognizerIntent.LANGUAGE_MODEL_FREE_FORM)
+                putExtra(RecognizerIntent.EXTRA_LANGUAGE, "ko-KR")
+                putExtra(RecognizerIntent.EXTRA_PROMPT, "목적지를 말씀해 주세요")
+            }
+        }
+
         override fun onReadyForSpeech(params: Bundle?) {}
         override fun onBeginningOfSpeech() {}
         override fun onRmsChanged(rmsdB: Float) {}

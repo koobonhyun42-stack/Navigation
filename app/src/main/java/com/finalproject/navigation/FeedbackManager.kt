@@ -45,6 +45,9 @@ class FeedbackManager(private val context: Context) : TextToSpeech.OnInitListene
             val result = tts?.setLanguage(Locale.KOREAN)
             if (result != TextToSpeech.LANG_MISSING_DATA && result != TextToSpeech.LANG_NOT_SUPPORTED) {
                 isTtsReady = true
+
+
+                tts?.setSpeechRate(0.8f)
             }
         }
     }
