@@ -8,7 +8,6 @@ import android.os.Bundle
 import android.speech.RecognizerIntent
 import android.util.Log
 import android.view.MotionEvent
-import android.widget.Button
 import android.widget.Toast
 import androidx.activity.result.contract.ActivityResultContracts
 import androidx.appcompat.app.AppCompatActivity
@@ -17,12 +16,7 @@ import androidx.camera.core.ImageAnalysis
 import androidx.camera.core.Preview
 import androidx.camera.lifecycle.ProcessCameraProvider
 import androidx.core.content.ContextCompat
-import androidx.lifecycle.lifecycleScope
 import com.finalproject.navigation.databinding.ActivityMainBinding
-import kotlinx.coroutines.Dispatchers
-import kotlinx.coroutines.launch
-import retrofit2.Retrofit
-import retrofit2.converter.gson.GsonConverterFactory
 import java.util.Locale
 import java.util.concurrent.ExecutorService
 import java.util.concurrent.Executors
@@ -37,6 +31,9 @@ class MainActivity : AppCompatActivity() {
 
     private lateinit var voiceCommandManager: VoiceCommandManager
     private lateinit var powerSaveManager: PowerSaveManager
+
+    private val pathGuideManager = PathGuideManager()
+
     private var isDetectionActive = true
     private var isPowerSaveMode = false
 
@@ -157,50 +154,11 @@ class MainActivity : AppCompatActivity() {
             false
         }
 
-        val btnTest = findViewById<Button>(R.id.btnTestTMap)
-        btnTest.setOnClickListener {
-            Log.d("TMapTest", "버튼 클릭됨! 테스트 함수를 시작합니다.")
-            testTMapConnection()
-        }
-
         binding.btnSelectVideo.setOnClickListener {
             openVideoPicker()
         }
 
-        testTMapConnection()
         checkAndRequestPermissions()
-    }
-
-    private fun testTMapConnection() {
-        val retrofit = Retrofit.Builder()
-            .baseUrl("https://apis.openapi.sk.com/")
-            .addConverterFactory(GsonConverterFactory.create())
-            .build()
-
-        val service = retrofit.create(TMapApiService::class.java)
-
-        lifecycleScope.launch(Dispatchers.IO) {
-            try {
-                Log.d("TMapTest", "네트워크 요청 시작...")
-
-                val response = service.getPedestrianRoute(
-                    appKey = "yPDwRxoi5d2x5zYsGinmf3LWrVPMcegB9KxGbsJK",
-                    startX = 126.978388,
-                    startY = 37.566610,
-                    endX = 126.972533,
-                    endY = 37.555946
-                )
-
-                val firstFeature = response.features?.firstOrNull()
-                val totalDistance = firstFeature?.properties?.totalDistance ?: 0
-                val totalTime = firstFeature?.properties?.totalTime ?: 0
-
-                Log.d("TMapTest", "연동 성공! 총 거리: ${totalDistance}m, 총 소요 시간: ${totalTime}초")
-
-            } catch (e: Exception) {
-                Log.e("TMapTest", "연동 실패: ${e.localizedMessage ?: e.message}")
-            }
-        }
     }
 
     private fun checkAndRequestPermissions() {
@@ -258,7 +216,10 @@ class MainActivity : AppCompatActivity() {
 
                             val viewWidth = binding.viewFinder.width
                             val viewHeight = binding.viewFinder.height
+
                             feedbackManager.processDetections(results, viewWidth, viewHeight)
+
+                            val guidance = pathGuideManager.evaluatePathAlignment(results, viewWidth)
                         }
 
                         imageProxy.close()
@@ -306,23 +267,8 @@ class MainActivity : AppCompatActivity() {
         val startLat = 37.5665
         val startLng = 126.9780
 
-        val retrofit = Retrofit.Builder()
-            .baseUrl("https://apis.openapi.sk.com/")
-            .addConverterFactory(GsonConverterFactory.create())
-            .build()
-
-        val service = retrofit.create(TMapApiService::class.java)
-
-        lifecycleScope.launch(Dispatchers.IO) {
-            try {
-                val response = service.getPedestrianRoute(
-                    appKey = "yPDwRxoi5d2x5zYsGinmf3LWrVPMcegB9KxGbsJK",
-                    startX = startLng,
-                    startY = startLat,
-                    endX = endLng,
-                    endY = endLat
-                )
-
+        TMapClient.requestRoute(startLng, startLat, endLng, endLat) { response ->
+            if (response != null) {
                 val firstFeature = response.features?.firstOrNull()
                 val distance = firstFeature?.properties?.totalDistance ?: 0
                 val time = firstFeature?.properties?.totalTime ?: 0
@@ -333,15 +279,9 @@ class MainActivity : AppCompatActivity() {
                     distance,
                     time / 60
                 )
-
-                runOnUiThread {
-                    feedbackManager.speak(message)
-                }
-            } catch (e: Exception) {
-                Log.e(TAG, "경로 요청 실해: ${e.message}")
-                runOnUiThread {
-                    feedbackManager.speak("경로를 불러오는 데 실패했습니다.")
-                }
+                feedbackManager.speak(message)
+            } else {
+                feedbackManager.speak("경로를 불러오는 데 실패했습니다.")
             }
         }
     }
