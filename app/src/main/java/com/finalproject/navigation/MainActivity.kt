@@ -102,7 +102,7 @@ class MainActivity : AppCompatActivity() {
             when (command) {
                 VoiceCommandManager.Command.START -> {
                     isDetectionActive = true
-                    feedbackManager.speak("보행 안내를 시작합니다.")
+                    feedbackManager.speak("보행 안내를 시작합니다.", FeedbackManager.SpeechPriority.HIGH  )
                 }
 
                 VoiceCommandManager.Command.PAUSE -> {
@@ -220,6 +220,9 @@ class MainActivity : AppCompatActivity() {
                             feedbackManager.processDetections(results, viewWidth, viewHeight)
 
                             val guidance = pathGuideManager.evaluatePathAlignment(results, viewWidth)
+                            if (guidance.message.isNotBlank()) {
+                                feedbackManager.speak(guidance.message)
+                            }
                         }
 
                         imageProxy.close()
@@ -279,7 +282,7 @@ class MainActivity : AppCompatActivity() {
                     distance,
                     time / 60
                 )
-                feedbackManager.speak(message)
+                feedbackManager.speak(message, FeedbackManager.SpeechPriority.HIGH)
             } else {
                 feedbackManager.speak("경로를 불러오는 데 실패했습니다.")
             }

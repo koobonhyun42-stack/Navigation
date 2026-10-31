@@ -56,19 +56,22 @@ class PathGuideManager {
         return yellowRatio >= 0.3f
     }
 
-    fun evaluatePathAlignmentWithColor(
+    fun evaluatePathAlignment(
         pathBoxes: List<BoundingBox>,
         viewWidth: Int,
-        currentBitmap: Bitmap?
+        currentBitmap: Bitmap? = null
     ): GuidanceResult {
         val validBoxes = if (currentBitmap != null) {
-            pathBoxes.filter { box -> box.cls == 0 && isValidYellowBlock(currentBitmap, box) }
+            pathBoxes.filter { box -> isValidYellowBlock(currentBitmap, box) }
         } else {
-            pathBoxes.filter { box -> box.cls == 0 }
+            pathBoxes.filter { box ->
+                box.clsName.contains("block", ignoreCase = true) ||
+                box.clsName.contains("braille", ignoreCase = true)
+            }
         }
 
         if (validBoxes.isEmpty() || viewWidth <= 0) {
-            return GuidanceResult(AlignmentState.LOST, 0f, "점자블록을 찾을 수 없습니다. 주의해서 보행하세요.")
+            return GuidanceResult(AlignmentState.LOST, 0f, "")
         }
 
         val screenCenterX = viewWidth / 2f
@@ -78,7 +81,7 @@ class PathGuideManager {
             ""
         )
 
-        val blockCenterX = viewWidth / 2f
+        val blockCenterX = primaryBlock.cx
         val deviation = blockCenterX - screenCenterX
         val tolerancePx = viewWidth * CENTER_TOLERANCE_RATIO
 
