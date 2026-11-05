@@ -8,10 +8,17 @@ import android.os.VibrationEffect
 import android.os.Vibrator
 import android.os.VibratorManager
 import android.speech.tts.TextToSpeech
+import androidx.camera.core.ImageProxy
 import java.util.Locale
 import kotlin.math.abs
 
 class FeedbackManager(private val context: Context) : TextToSpeech.OnInitListener {
+    enum class SpeechPriority {
+        HIGH,
+        NORMAL
+    }
+
+    private val detector = YoloDetector(context)
 
     private var tts: TextToSpeech? = null
     private var isTtsReady = false
@@ -56,6 +63,21 @@ class FeedbackManager(private val context: Context) : TextToSpeech.OnInitListene
                 isTtsReady = true
                 tts?.setSpeechRate(0.8f)
             }
+        }
+    }
+
+    fun processImageFrame(imageProxy: ImageProxy) {
+        try {
+            val viewWidth = imageProxy.width
+            val viewHeight = imageProxy.height
+
+            val results = detector.detect(imageProxy)
+            processDetections(results, viewWidth, viewHeight)
+
+        } catch (e: Exception) {
+            e.printStackTrace()
+        } finally {
+            imageProxy.close()
         }
     }
 
@@ -258,11 +280,6 @@ class FeedbackManager(private val context: Context) : TextToSpeech.OnInitListene
             }
         }
         lastVibratedTime = now
-    }
-
-    enum class SpeechPriority {
-        HIGH,
-        NORMAL
     }
 
     fun speak(text: String, priority: SpeechPriority = SpeechPriority.NORMAL) {

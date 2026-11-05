@@ -9,7 +9,7 @@ import android.graphics.Matrix
 import androidx.camera.core.ImageProxy
 import java.nio.FloatBuffer
 import java.util.Collections
-import com.finalproject.navigation.BoundingBox
+import java.util.Locale
 
 class YoloDetector(
     private val context: Context,
@@ -103,11 +103,40 @@ class YoloDetector(
                 val x2 = (cx + w / 2) * imgWidth / inputSize.toFloat()
                 val y2 = (cy + h / 2) * imgHeight / inputSize.toFloat()
 
-                boxes.add(BoundingBox(x1, y1, x2, y2, maxConf, maxClass))
+                val className = labels.getOrNull(maxClass) ?: ""
+
+                val tempBox = BoundingBox(
+                    x1 = x1, y1 = y1, x2 = x2, y2 = y2,
+                    cnf = maxConf, cls = maxClass, clsName = className
+                )
+
+                val estimatedDist = estimateDistance(tempBox, imgHeight)
+
+                tempBox.distanceMeter = estimatedDist
+                boxes.add(tempBox)
             }
         }
 
         return nms(boxes)
+    }
+
+    private fun estimateDistance(box: BoundingBox, frameHeight: Int): Float {
+        val boxHeightPx = box.h
+        if (boxHeightPx <= 0f) return -1f
+
+        val realObjectHeightMeter = when (box.clsName.lowercase(Locale.ROOT)) {
+            "person", "사람" -> 1.7f
+            "bicycle", "자전거" -> 1.0f
+            "car", "차량" -> 1.5f
+            "bus", "버스" -> 3.2f
+            "chair", "의자" -> 0.9f
+            "bollard", "볼라드" -> 0.8f
+            else -> 1.0f
+        }
+
+        val focalLengthPx = frameHeight * 0.8f
+
+        return (realObjectHeightMeter * focalLengthPx) / boxHeightPx
     }
 
     private fun nms(boxes: List<BoundingBox>): List<BoundingBox> {
