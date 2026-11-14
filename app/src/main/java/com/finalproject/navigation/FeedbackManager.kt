@@ -61,7 +61,7 @@ class FeedbackManager(private val context: Context) : TextToSpeech.OnInitListene
             val result = tts?.setLanguage(Locale.KOREAN)
             if (result != TextToSpeech.LANG_MISSING_DATA && result != TextToSpeech.LANG_NOT_SUPPORTED) {
                 isTtsReady = true
-                tts?.setSpeechRate(0.8f)
+                tts?.setSpeechRate(1.0f)
             }
         }
     }
@@ -153,14 +153,6 @@ class FeedbackManager(private val context: Context) : TextToSpeech.OnInitListene
         lastSpokenDistance = smoothedDistance
     }
 
-    private fun getRiskPriority(krName: String): Int {
-        return when (krName) {
-            "사람", "차량", "오토바이", "버스", "트럭" -> 1
-            "자전거", "계단", "신호등", "볼라드" -> 2
-            else -> 3
-        }
-    }
-
     private fun getSmoothedDistance(key: String, rawDistance: Float): Float {
         val history = distanceHistoryMap.getOrPut(key) { ArrayDeque() }
         if (history.size >= windowSize) {
@@ -182,64 +174,25 @@ class FeedbackManager(private val context: Context) : TextToSpeech.OnInitListene
         }
     }
 
+    private fun getRiskPriority(krName: String): Int {
+        return when (krName) {
+            "사람", "차량" -> 1
+            "자전거", "계단", "위험표지판" -> 2
+            else -> 3
+        }
+    }
+
     private fun getKoreanClassName(box: BoundingBox): String {
         val cleanName = box.clsName.lowercase(Locale.ROOT).trim()
 
-        if (cleanName.isNotBlank()) {
-            return when {
-                cleanName.contains("person") || cleanName.contains("사람") -> "사람"
-                cleanName.contains("car") || cleanName.contains("차") -> "차량"
-                cleanName.contains("motorcycle") || cleanName.contains("bike") || cleanName.contains("오토바이") -> "오토바이"
-                cleanName.contains("bus") -> "버스"
-                cleanName.contains("truck") -> "트럭"
-                cleanName.contains("bicycle") -> "자전거"
-                cleanName.contains("chair") -> "의자"
-                cleanName.contains("table") -> "탁자"
-                cleanName.contains("stair") || cleanName.contains("stairs") -> "계단"
-                cleanName == "train" -> "열차"
-                cleanName == "boat" -> "보트"
-                cleanName == "traffic light" -> "신호등"
-                cleanName == "fire hydrant" -> "소화전"
-                cleanName == "stop sign" -> "정지 표지판"
-                cleanName == "parking meter" -> "주차 미터기"
-                cleanName == "bench" -> "벤치"
-                cleanName == "bollard" -> "볼라드"
-                cleanName == "door" -> "문"
-                cleanName == "pole" || cleanName == "potted plant" -> "기둥"
-                cleanName == "couch" -> "소파"
-                cleanName == "bed" -> "침대"
-                cleanName == "toilet" -> "변기"
-                cleanName == "tv" -> "텔레비전"
-                cleanName == "laptop" -> "노트북"
-                cleanName == "refrigerator" -> "냉장고"
-                cleanName == "microwave" -> "전자레인지"
-                cleanName == "oven" -> "오븐"
-                cleanName == "sink" -> "싱크대"
-                cleanName == "clock" -> "시계"
-                cleanName == "vase" -> "꽃병"
-                cleanName == "cat" -> "고양이"
-                cleanName == "dog" -> "강아지"
-                cleanName == "horse" -> "말"
-                cleanName == "umbrella" -> "우산"
-                cleanName == "backpack" -> "배낭"
-                cleanName == "handbag" -> "핸드백"
-                cleanName == "suitcase" -> "여행가방"
-                cleanName == "bottle" -> "병"
-                cleanName == "cup" -> "컵"
-                cleanName == "book" -> "책"
-                else -> ""
-            }
-        }
-
-        return when (box.cls) {
-            0 -> "사람"
-            1 -> "자전거"
-            2 -> "차량"
-            3 -> "오토바이"
-            5 -> "버스"
-            7 -> "트럭"
-            56 -> "의자"
-            60 -> "탁자"
+        return when {
+            cleanName.contains("braille") || cleanName.contains("block") -> "점자블록"
+            cleanName.contains("person") || cleanName.contains("사람") -> "사람"
+            cleanName.contains("vehicle") || cleanName.contains("car") -> "차량"
+            cleanName.contains("bike") || cleanName.contains("bicycle") -> "자전거"
+            cleanName.contains("stair") -> "계단"
+            cleanName.contains("hazard") || cleanName.contains("sign") -> "위험표지판"
+            cleanName.contains("crosswalk") -> "횡단보도"
             else -> ""
         }
     }

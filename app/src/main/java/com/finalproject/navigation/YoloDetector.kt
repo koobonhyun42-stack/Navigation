@@ -13,7 +13,7 @@ import java.util.Locale
 
 class YoloDetector(
     private val context: Context,
-    private val modelPath: String = "yolov8n.onnx",
+    private val modelPath: String = "best.onnx",
     private val onResults: ((List<BoundingBox>) -> Unit)? = null
 ) {
     private val env: OrtEnvironment = OrtEnvironment.getEnvironment()
@@ -22,16 +22,13 @@ class YoloDetector(
     val inputSize: Int = 640
 
     val labels = arrayOf(
-        "person", "bicycle", "car", "motorcycle", "airplane", "bus", "train", "truck", "boat",
-        "traffic light", "fire hydrant", "stop sign", "parking meter", "bench", "bird", "cat",
-        "dog", "horse", "sheep", "cow", "elephant", "bear", "zebra", "giraffe", "backpack",
-        "umbrella", "handbag", "tie", "suitcase", "frisbee", "skis", "snowboard", "sports ball",
-        "kite", "baseball bat", "baseball glove", "skateboard", "surfboard", "tennis racket",
-        "bottle", "wine glass", "cup", "fork", "knife", "spoon", "bowl", "banana", "apple",
-        "sandwich", "orange", "broccoli", "carrot", "hot dog", "pizza", "donut", "cake", "chair",
-        "couch", "potted plant", "bed", "dining table", "toilet", "tv", "laptop", "mouse",
-        "remote", "keyboard", "cell phone", "microwave", "oven", "toaster", "sink", "refrigerator",
-        "book", "clock", "vase", "scissors", "teddy bear", "hair drier", "toothbrush"
+        "BrailleBrailleBlock-Detect",
+        "bike",
+        "crosswalk",
+        "hazard-sign",
+        "person",
+        "stairs",
+        "vehicle"
     )
 
     init {
@@ -77,7 +74,7 @@ class YoloDetector(
 
     private fun processOutPut(output: Array<FloatArray>, imgWidth: Int, imgHeight: Int): List<BoundingBox> {
         val boxes = mutableListOf<BoundingBox>()
-        val numClasses = 80
+        val numClasses = labels.size
         val numAnchors = 8400
 
         for (i in 0 until numAnchors) {
@@ -103,7 +100,7 @@ class YoloDetector(
                 val x2 = (cx + w / 2) * imgWidth / inputSize.toFloat()
                 val y2 = (cy + h / 2) * imgHeight / inputSize.toFloat()
 
-                val className = labels.getOrNull(maxClass) ?: ""
+                val className = labels.getOrNull(maxClass) ?: "unknown"
 
                 val tempBox = BoundingBox(
                     x1 = x1, y1 = y1, x2 = x2, y2 = y2,
@@ -125,12 +122,13 @@ class YoloDetector(
         if (boxHeightPx <= 0f) return -1f
 
         val realObjectHeightMeter = when (box.clsName.lowercase(Locale.ROOT)) {
+            "braillebrailleblock-detect", "점자블록" -> 0.3f
+            "bike", "자전거" -> 1.0f
+            "crosswalk", "횡단보도" -> 0.1f
+            "hazard-sign", "위험표지판" -> 0.8f
             "person", "사람" -> 1.7f
-            "bicycle", "자전거" -> 1.0f
-            "car", "차량" -> 1.5f
-            "bus", "버스" -> 3.2f
-            "chair", "의자" -> 0.9f
-            "bollard", "볼라드" -> 0.8f
+            "stairs", "계단" -> 1.5f
+            "vehicle", "차량" -> 1.5f
             else -> 1.0f
         }
 
