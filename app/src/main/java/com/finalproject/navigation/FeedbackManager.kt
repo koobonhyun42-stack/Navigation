@@ -86,6 +86,18 @@ class FeedbackManager(private val context: Context) : TextToSpeech.OnInitListene
         if (boxes.isEmpty()) return
         val now = System.currentTimeMillis()
 
+
+        val highRiskBoxes = boxes.filter { box ->
+            val krName = getKoreanClassName(box)
+            val dist = if (box.distanceMeter > 0f) box.distanceMeter else 1.5f
+            getRiskPriority(krName) == 1 || dist <= 1.5f
+        }
+
+        if (highRiskBoxes.isNotEmpty()) {
+            processObstacleFeedback(highRiskBoxes, viewWidth, now)
+            return
+        }
+
         val pathBoxes = boxes.filter {
             it.clsName.contains("block", ignoreCase = true) ||
                     it.clsName.contains("braille", ignoreCase = true)
@@ -101,7 +113,10 @@ class FeedbackManager(private val context: Context) : TextToSpeech.OnInitListene
                 }
             }
         }
+        processObstacleFeedback(boxes, viewWidth, now)
+    }
 
+    private fun processObstacleFeedback(boxes: List<BoundingBox>, viewWidth: Int, now: Long) {
         if (now - lastSpokenTime < speechIntervalMs) return
 
         val translatedBoxes = boxes.mapNotNull { box ->
@@ -127,7 +142,7 @@ class FeedbackManager(private val context: Context) : TextToSpeech.OnInitListene
         val rawDistance = if (primaryTarget.distanceMeter > 0f) primaryTarget.distanceMeter else 1.5f
         val smoothedDistance = getSmoothedDistance(classNameKr, rawDistance)
 
-        val positionText = getDirectionText(primaryTarget.cx, viewWidth)
+        val positionText = getDirectionText(primaryTarget, viewWidth)
         val targetKey = "$positionText-$classNameKr"
 
         if (targetKey == lastSpokenTargetKey && abs(smoothedDistance - lastSpokenDistance) < 0.5f) {
@@ -143,6 +158,8 @@ class FeedbackManager(private val context: Context) : TextToSpeech.OnInitListene
             smoothedDistance,
             classNameKr
         )
+
+        val priority = if (smoothedDistance <= 1.2f) SpeechPriority.HIGH else SpeechPriority.NORMAL
 
         triggerVibration(smoothedDistance, positionText)
         speak(speechMessage, SpeechPriority.NORMAL)
@@ -162,14 +179,22 @@ class FeedbackManager(private val context: Context) : TextToSpeech.OnInitListene
         return history.average().toFloat()
     }
 
-    private fun getDirectionText(cx: Float, viewWidth: Int): String {
+    private fun getDirectionText(box: BoundingBox, viewWidth: Int): String {
         if (viewWidth <= 0) return "전방"
+
+        val boxWidth = box.x2 - box.x1
+        val screenWidthFloat = viewWidth.toFloat()
+
+        if (boxWidth > screenWidthFloat * 0.6f) {
+            return "전방"
+        }
+
         val leftThreshold = viewWidth * 0.35f
-        val rightThreshold = viewWidth * 0.65f
+        val rightThreshold = viewWidth *0.65f
 
         return when {
-            cx < leftThreshold -> "좌측"
-            cx > rightThreshold -> "우측"
+            box.cx < leftThreshold -> "좌측"
+            box.cx > rightThreshold -> "우측"
             else -> "전방"
         }
     }
