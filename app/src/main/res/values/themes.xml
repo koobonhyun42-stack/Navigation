@@ -1,4 +1,15 @@
 <?xml version="1.0" encoding="utf-8"?>
 <resources>
-    <style name="Theme.Navigation" parent="Theme.MaterialComponents.DayNight.NoActionBar" />
+    <!-- 폰이 밝은 모드여도 항상 어두운 테마를 씀 (목적지 고르기 창의 노란 글자가 흰 바탕에 묻히지 않게) -->
+    <style name="Theme.Navigation" parent="Theme.MaterialComponents.NoActionBar">
+        <item name="colorPrimary">@color/ui_accent</item>
+        <item name="colorPrimaryVariant">@color/ui_accent</item>
+        <item name="colorOnPrimary">@color/ui_on_accent</item>
+        <item name="colorSecondary">@color/ui_accent</item>
+        <item name="android:fontFamily">sans</item>
+        <item name="android:windowLightStatusBar">false</item>
+        <item name="android:statusBarColor">@color/ui_background</item>
+        <item name="android:navigationBarColor">@color/ui_background</item>
+        <item name="android:windowBackground">@color/ui_background</item>
+    </style>
 </resources>

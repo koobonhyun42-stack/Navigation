@@ -1,0 +1,15 @@
+<?xml version="1.0" encoding="utf-8"?>
+<resources>
+    <color name="ui_background">#000000</color>
+    <color name="ui_surface">#1A1A1A</color>
+    <color name="ui_text">#FFFFFF</color>
+    <color name="ui_secondary">#BDBDBD</color>
+    <color name="ui_accent">#FFD60A</color>
+    <color name="ui_on_accent">#000000</color>
+    <color name="ui_white_button">#FFFFFF</color>
+    <color name="ui_on_white_button">#000000</color>
+    <color name="ui_border">#FFFFFF</color>
+    <color name="ui_divider">#333333</color>
+    <color name="ui_stopped">#FF6B5B</color>
+    <color name="ui_focus">#4FC3FF</color>
+</resources>

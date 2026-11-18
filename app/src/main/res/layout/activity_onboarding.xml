@@ -1,0 +1,46 @@
+<?xml version="1.0" encoding="utf-8"?>
+<!-- 첫 사용 안내: 쪽 번호 → 제목 → 설명 → 다음 버튼 → [이전] [건너뛰기]
+     설명 부분만 스크롤되게 해서 폰 글자 크기를 키워도 글이 버튼에 가려지지 않게 함 -->
+<LinearLayout xmlns:android="http://schemas.android.com/apk/res/android"
+    android:layout_width="match_parent" android:layout_height="match_parent"
+    android:background="@color/ui_background" android:orientation="vertical"
+    android:padding="16dp">
+
+    <androidx.core.widget.NestedScrollView android:id="@+id/onbScroll"
+        android:layout_width="match_parent" android:layout_height="0dp"
+        android:layout_weight="1">
+    <LinearLayout android:layout_width="match_parent" android:layout_height="wrap_content"
+        android:orientation="vertical" android:paddingBottom="16dp">
+    <TextView android:id="@+id/tvStep" style="@style/UiSecondary"
+        android:layout_width="match_parent" android:layout_height="wrap_content"
+        android:layout_marginTop="8dp"/>
+    <TextView android:id="@+id/tvTitle" style="@style/UiBody"
+        android:layout_width="match_parent" android:layout_height="wrap_content"
+        android:layout_marginTop="12dp" android:textSize="32sp" android:textStyle="bold"/>
+    <TextView android:id="@+id/tvBody" style="@style/UiBody"
+        android:layout_width="match_parent" android:layout_height="wrap_content"
+        android:layout_marginTop="20dp" android:textSize="22sp"
+        android:lineSpacingExtra="8dp"/>
+    </LinearLayout>
+    </androidx.core.widget.NestedScrollView>
+
+    <com.google.android.material.button.MaterialButton android:id="@+id/btnNext"
+        style="@style/UiBigButton" android:layout_width="match_parent"
+        android:layout_height="wrap_content" android:minHeight="120dp"
+        android:layout_marginTop="12dp" android:text="@string/onb_next"/>
+    <LinearLayout android:layout_width="match_parent" android:layout_height="wrap_content"
+        android:layout_marginTop="12dp" android:orientation="horizontal"
+        android:baselineAligned="false">
+        <com.google.android.material.button.MaterialButton android:id="@+id/btnPrev"
+            style="@style/UiButton" android:layout_width="0dp"
+            android:layout_height="match_parent" android:layout_weight="1"
+            android:gravity="center" android:minHeight="64dp"
+            android:text="@string/onb_prev"/>
+        <com.google.android.material.button.MaterialButton android:id="@+id/btnSkip"
+            style="@style/UiButton" android:layout_width="0dp"
+            android:layout_height="match_parent" android:layout_weight="1"
+            android:layout_marginStart="12dp"
+            android:gravity="center" android:minHeight="64dp"
+            android:text="@string/onb_skip"/>
+    </LinearLayout>
+</LinearLayout>

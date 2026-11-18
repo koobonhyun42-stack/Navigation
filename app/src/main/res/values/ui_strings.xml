@@ -1,0 +1,125 @@
+<resources>
+    <!-- 상태 문장 (화면 맨 위) -->
+    <string name="ui_status_waiting">카메라 준비 중</string>
+    <string name="ui_status_active">주변 살피는 중</string>
+    <string name="ui_status_passive">주변 살피는 중 (절전)</string>
+    <string name="ui_status_paused">멈춤</string>
+    <string name="ui_status_permission">카메라를 쓸 수 없어요</string>
+    <string name="ui_status_camera_error">카메라가 켜지지 않아요</string>
+    <string name="ui_status_video">동영상 시험 중</string>
+    <string name="ui_status_detail">위험하면 소리와 진동으로 알려요.</string>
+    <string name="ui_status_paused_detail">주변을 살피지 않아요.</string>
+    <string name="ui_status_permission_detail">카메라를 허용해 주세요.</string>
+    <string name="ui_status_video_detail">실제 주변은 살피지 않아요.</string>
+    <string name="ui_status_hint">다시 듣기</string>
+    <string name="ui_status_blocked">카메라가 막혀 있어요</string>
+    <string name="ui_status_blocked_detail">폰 설정에서 카메라를 허용해 주세요.</string>
+    <!-- 최근 경고 (탐지 쪽에서 문장을 넘겨주면 표시) -->
+    <string name="ui_last_warning">최근 경고: %1$s</string>
+    <string name="ui_last_warning_none">아직 들려준 경고가 없어요.</string>
+
+    <!-- 큰 버튼 -->
+    <string name="ui_pause">잠깐 멈추기</string>
+    <string name="ui_resume">다시 시작</string>
+    <string name="ui_permission_retry">카메라 허용하기</string>
+    <string name="ui_permission_settings">설정에서 허용하기</string>
+    <string name="ui_destination_voice">목적지 말하기</string>
+    <string name="ui_route_end">안내 끝내기</string>
+    <string name="ui_more">더보기</string>
+
+    <!-- 경로 (데모: 고정 출발점, 도서관/정문) -->
+    <string name="ui_route_loading">%1$s 길 찾는 중</string>
+    <string name="ui_route_result">%1$s까지 %2$d미터, 약 %3$d분</string>
+    <string name="ui_route_failed">길을 찾지 못했어요. 잠시 후 다시 해 주세요.</string>
+    <string name="ui_route_unavailable">도서관 또는 정문이라고 말해 주세요.</string>
+    <string name="ui_route_cancelled">목적지 말하기를 취소했어요.</string>
+    <string name="ui_route_ended">길 안내를 끝냈어요.</string>
+    <string name="ui_choose_destination">어디로 갈까요?</string>
+    <string-array name="ui_destinations"><item>도서관</item><item>정문</item></string-array>
+    <string name="ui_cancel">취소</string>
+    <!-- 안내 끝내기 확인 -->
+    <string name="ui_route_end_confirm">길 안내를 끝낼까요?</string>
+    <string name="ui_route_end_yes">끝내기</string>
+    <string name="ui_route_end_no">계속 안내</string>
+
+    <!-- 더보기 화면 -->
+    <string name="ui_more_title">더보기</string>
+    <string name="ui_destination_text">목적지 목록에서 고르기</string>
+    <string name="ui_voice_command">음성 명령 한 번 말하기</string>
+    <string name="ui_voice_help">삐 소리가 나면 “시작”, “정지”, “상태” 중 하나를 말하세요. 한 번 듣고 끝나요.</string>
+    <string name="ui_last_warning_replay">마지막 경고 다시 듣기</string>
+    <string name="ui_video">동영상으로 탐지 시험</string>
+    <string name="ui_back">돌아가기</string>
+    <string name="ui_settings">설정</string>
+    <!-- 시연 화면 (카메라 전체 화면) -->
+    <string name="ui_demo_mode">시연 화면 보기</string>
+    <string name="ui_demo_exit_hint">뒤로가기를 누르면 시연 화면을 닫아요</string>
+    <string name="demo_state_active">탐지 중</string>
+    <string name="demo_state_paused">멈춤</string>
+    <string name="demo_count">감지 객체 %1$d개</string>
+    <string name="demo_nearest">가장 가까운 객체: %1$s %2$.1fm</string>
+    <string name="demo_nearest_no_distance">가장 가까운 객체: %1$s</string>
+    <string name="demo_nearest_none">가장 가까운 객체: 없음</string>
+    <string name="demo_caption">실시간 카메라 영상 분석 중</string>
+    <!-- 화면이 바뀔 때 알려 주는 말 -->
+    <string name="ui_screen_main">메인 화면</string>
+    <string name="ui_screen_more">더보기</string>
+    <string name="ui_screen_settings">설정</string>
+    <string name="ui_screen_onboarding">첫 사용 안내</string>
+    <string name="ui_voice_unknown">잘 못 들었어요. 시작, 정지, 상태 중에 말해 주세요.</string>
+    <string name="ui_safety">이 앱은 시험판이에요. 흰지팡이와 주변 확인을 대신하지 않습니다.</string>
+
+    <!-- 동영상 시험 -->
+    <string name="ui_video_stop">동영상 시험 멈추기</string>
+    <string name="ui_video_stopping">동영상 시험을 멈추는 중</string>
+    <string name="ui_video_done">동영상 시험 끝 · 찾은 물체 %1$d개</string>
+    <string name="ui_video_error">동영상을 열지 못했어요. 다른 파일로 해 주세요.</string>
+    <string name="ui_video_cancelled">동영상 시험을 멈췄어요.</string>
+
+    <!-- 권한·오류 -->
+    <string name="ui_microphone_needed">음성 기능에는 마이크 권한이 필요합니다.</string>
+    <string name="ui_microphone_ready">마이크를 허용했어요. 버튼을 다시 눌러 주세요.</string>
+    <string name="ui_speech_unavailable">음성 인식을 쓸 수 없어요. 더보기에서 목적지를 골라 주세요.</string>
+    <string name="ui_camera_error_help">카메라 권한과 사용 상태를 확인한 뒤 다시 해 주세요.</string>
+    <string name="ui_microphone_blocked">마이크가 막혀 있어요. 폰 설정에서 마이크를 허용해 주세요.</string>
+    <string name="ui_open_settings">설정 열기</string>
+
+    <!-- 첫 사용 안내 -->
+    <string name="onb_step">%1$d / %2$d</string>
+    <string name="onb_title_1">걸을 때 주변을 알려 드려요</string>
+    <string name="onb_body_1">휴대전화 카메라로 앞을 살피고, 사람이나 차 같은 장애물이 있으면 소리와 진동으로 알려 드려요.
+
+이 앱은 시험판이에요. 흰지팡이와 주변 확인을 대신하지 않아요.</string>
+    <string name="onb_title_2">카메라와 마이크를 써요</string>
+    <string name="onb_body_2">카메라는 앞을 살피는 데 써요. 시작하면 카메라 허용을 물어봐요.
+
+마이크는 목적지를 말할 때만 써요. 처음 말하기 버튼을 누를 때 물어봐요.</string>
+    <string name="onb_title_3">버튼은 두 개면 돼요</string>
+    <string name="onb_body_3">화면 아래 왼쪽 노란 버튼: 주변 살피기를 잠깐 멈추거나 다시 시작해요.
+
+그 오른쪽 흰 버튼: 가고 싶은 곳을 말해요.
+
+맨 위 상태 문장을 누르면 지금 상태를 다시 읽어 줘요. 나머지 기능은 더보기에 있어요.</string>
+    <string name="onb_next">다음</string>
+    <string name="onb_start">시작하기</string>
+    <string name="onb_skip">안내 건너뛰기</string>
+    <string name="onb_prev">이전</string>
+
+    <!-- 설정 -->
+    <string name="set_title">설정</string>
+    <string name="set_speech_title">말하기 속도</string>
+    <string name="set_speech_slow">느리게</string>
+    <string name="set_speech_normal">보통</string>
+    <string name="set_speech_fast">빠르게</string>
+    <string name="set_vibration_title">진동</string>
+    <string name="set_vibration_switch">진동으로 알려 주기</string>
+    <string name="set_vibration_help">왼쪽 장애물은 짧게 두 번, 오른쪽은 길게 한 번, 앞쪽은 가까울수록 길게 울려요.</string>
+    <string name="set_vibration_try">진동 느껴 보기</string>
+    <string name="set_vibration_left">왼쪽 장애물</string>
+    <string name="set_vibration_right">오른쪽 장애물</string>
+    <string name="set_vibration_front">앞쪽 가까운 장애물</string>
+    <string name="set_onboarding">첫 사용 안내 다시 보기</string>
+    <string name="set_speech_sample">%1$s. 이 속도로 말할게요.</string>
+    <string name="set_vibration_on">진동 켜짐</string>
+    <string name="set_vibration_off">진동 꺼짐</string>
+</resources>

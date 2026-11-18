@@ -1,0 +1,85 @@
+<?xml version="1.0" encoding="utf-8"?>
+<!-- 설정 화면 -->
+<androidx.core.widget.NestedScrollView xmlns:android="http://schemas.android.com/apk/res/android"
+    xmlns:app="http://schemas.android.com/apk/res-auto"
+    android:layout_width="match_parent" android:layout_height="match_parent"
+    android:background="@color/ui_background" android:fillViewport="true">
+    <LinearLayout android:layout_width="match_parent" android:layout_height="wrap_content"
+        android:orientation="vertical" android:padding="16dp">
+
+        <TextView android:id="@+id/tvSettingsTitle" style="@style/UiBody"
+            android:layout_width="match_parent" android:layout_height="wrap_content"
+            android:layout_marginStart="4dp" android:text="@string/set_title"
+            android:textSize="28sp" android:textStyle="bold"/>
+
+        <!-- 말하기 속도 -->
+        <TextView android:id="@+id/tvSpeechTitle" style="@style/UiBody"
+            android:layout_width="match_parent" android:layout_height="wrap_content"
+            android:layout_marginStart="4dp" android:layout_marginTop="24dp"
+            android:text="@string/set_speech_title" android:textSize="22sp"
+            android:textStyle="bold"/>
+        <RadioGroup android:id="@+id/rgSpeechRate"
+            android:layout_width="match_parent" android:layout_height="wrap_content"
+            android:layout_marginTop="8dp" android:orientation="vertical">
+            <RadioButton android:id="@+id/rbSlow" style="@style/UiRadio"
+                android:layout_width="match_parent" android:layout_height="wrap_content"
+                android:text="@string/set_speech_slow"/>
+            <RadioButton android:id="@+id/rbNormal" style="@style/UiRadio"
+                android:layout_width="match_parent" android:layout_height="wrap_content"
+                android:text="@string/set_speech_normal"/>
+            <RadioButton android:id="@+id/rbFast" style="@style/UiRadio"
+                android:layout_width="match_parent" android:layout_height="wrap_content"
+                android:text="@string/set_speech_fast"/>
+        </RadioGroup>
+
+        <!-- 진동 -->
+        <TextView android:id="@+id/tvVibrationTitle" style="@style/UiBody"
+            android:layout_width="match_parent" android:layout_height="wrap_content"
+            android:layout_marginStart="4dp" android:layout_marginTop="24dp"
+            android:text="@string/set_vibration_title" android:textSize="22sp"
+            android:textStyle="bold"/>
+        <com.google.android.material.switchmaterial.SwitchMaterial android:id="@+id/swVibration"
+            android:layout_width="match_parent" android:layout_height="wrap_content"
+            android:layout_marginTop="8dp" android:minHeight="72dp"
+            android:paddingStart="4dp" android:paddingEnd="4dp"
+            android:text="@string/set_vibration_switch" android:textColor="@color/ui_text"
+            android:textSize="22sp"/>
+        <TextView style="@style/UiSecondary" android:layout_width="match_parent"
+            android:layout_height="wrap_content" android:layout_marginStart="4dp"
+            android:text="@string/set_vibration_help"/>
+
+        <!-- 진동 느껴 보기: 실제 경고와 같은 모양으로 한 번씩 울림 -->
+        <TextView android:id="@+id/tvVibrationTry" style="@style/UiBody"
+            android:layout_width="match_parent" android:layout_height="wrap_content"
+            android:layout_marginStart="4dp" android:layout_marginTop="20dp"
+            android:text="@string/set_vibration_try" android:textSize="22sp"
+            android:textStyle="bold"/>
+        <com.google.android.material.button.MaterialButton android:id="@+id/btnVibLeft"
+            style="@style/UiButton" android:layout_width="match_parent"
+            android:layout_height="wrap_content" android:layout_marginTop="8dp"
+            android:text="@string/set_vibration_left"/>
+        <com.google.android.material.button.MaterialButton android:id="@+id/btnVibRight"
+            style="@style/UiButton" android:layout_width="match_parent"
+            android:layout_height="wrap_content" android:layout_marginTop="10dp"
+            android:text="@string/set_vibration_right"/>
+        <com.google.android.material.button.MaterialButton android:id="@+id/btnVibFront"
+            style="@style/UiButton" android:layout_width="match_parent"
+            android:layout_height="wrap_content" android:layout_marginTop="10dp"
+            android:text="@string/set_vibration_front"/>
+
+        <com.google.android.material.button.MaterialButton android:id="@+id/btnOnboarding"
+            style="@style/UiButton" android:layout_width="match_parent"
+            android:layout_height="wrap_content" android:layout_marginTop="28dp"
+            android:text="@string/set_onboarding"/>
+
+        <Space android:layout_width="match_parent" android:layout_height="0dp"
+            android:layout_weight="1" android:minHeight="16dp"/>
+
+        <com.google.android.material.button.MaterialButton android:id="@+id/btnSettingsBack"
+            style="@style/UiButton" android:layout_width="match_parent"
+            android:layout_height="wrap_content" android:layout_marginTop="16dp"
+            android:gravity="center" android:text="@string/ui_back"
+            app:backgroundTint="@color/ui_white_button"
+            android:textColor="@color/ui_on_white_button"/>
+    </LinearLayout>
+</androidx.core.widget.NestedScrollView>

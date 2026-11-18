@@ -1,0 +1,57 @@
+<resources>
+    <style name="UiBody">
+        <item name="android:textColor">@color/ui_text</item>
+        <item name="android:textSize">19sp</item>
+        <item name="android:lineSpacingExtra">4dp</item>
+    </style>
+    <style name="UiSecondary" parent="UiBody">
+        <item name="android:textColor">@color/ui_secondary</item>
+    </style>
+    <!-- 보조 메뉴용 버튼: 검정 바탕 + 흰 테두리 -->
+    <style name="UiButton" parent="Widget.MaterialComponents.Button">
+        <item name="android:minHeight">72dp</item>
+        <item name="android:textSize">22sp</item>
+        <item name="android:textStyle">bold</item>
+        <item name="android:textAllCaps">false</item>
+        <item name="android:gravity">start|center_vertical</item>
+        <item name="android:paddingStart">20dp</item>
+        <item name="android:paddingEnd">20dp</item>
+        <item name="android:insetTop">0dp</item>
+        <item name="android:insetBottom">0dp</item>
+        <item name="cornerRadius">12dp</item>
+        <item name="backgroundTint">@color/ui_background</item>
+        <item name="android:textColor">@color/ui_text</item>
+        <item name="strokeColor">@color/ui_border</item>
+        <item name="strokeWidth">2dp</item>
+        <item name="rippleColor">@color/ui_focus</item>
+    </style>
+    <!-- 메인 화면 큰 버튼 -->
+    <style name="UiBigButton" parent="Widget.MaterialComponents.Button">
+        <item name="android:textSize">32sp</item>
+        <item name="android:textStyle">bold</item>
+        <item name="android:textAllCaps">false</item>
+        <item name="android:insetTop">0dp</item>
+        <item name="android:insetBottom">0dp</item>
+        <item name="cornerRadius">12dp</item>
+        <item name="iconGravity">textTop</item>
+        <item name="iconSize">56dp</item>
+        <item name="iconPadding">12dp</item>
+        <item name="backgroundTint">@color/ui_accent</item>
+        <item name="android:textColor">@color/ui_on_accent</item>
+        <item name="iconTint">@color/ui_on_accent</item>
+        <item name="rippleColor">@color/ui_focus</item>
+    </style>
+    <style name="UiBigButton.White">
+        <item name="backgroundTint">@color/ui_white_button</item>
+        <item name="android:textColor">@color/ui_on_white_button</item>
+        <item name="iconTint">@color/ui_on_white_button</item>
+    </style>
+    <!-- 설정 화면 선택 버튼 -->
+    <style name="UiRadio">
+        <item name="android:minHeight">64dp</item>
+        <item name="android:textSize">22sp</item>
+        <item name="android:textColor">@color/ui_text</item>
+        <item name="android:buttonTint">@color/ui_accent</item>
+        <item name="android:paddingStart">12dp</item>
+    </style>
+</resources>
