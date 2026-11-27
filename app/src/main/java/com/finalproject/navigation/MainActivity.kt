@@ -15,8 +15,13 @@ import androidx.camera.core.CameraSelector
 import androidx.camera.core.ImageAnalysis
 import androidx.camera.core.Preview
 import androidx.camera.lifecycle.ProcessCameraProvider
+import androidx.core.app.ActivityCompat
 import androidx.core.content.ContextCompat
 import com.finalproject.navigation.databinding.ActivityMainBinding
+import com.google.android.gms.location.FusedLocationProviderClient
+import com.google.android.gms.location.LocationServices
+import com.google.android.gms.location.Priority
+import com.google.android.gms.tasks.CancellationTokenSource
 import java.util.Locale
 import java.util.concurrent.ExecutorService
 import java.util.concurrent.Executors
@@ -31,8 +36,7 @@ class MainActivity : AppCompatActivity() {
 
     private lateinit var voiceCommandManager: VoiceCommandManager
     private lateinit var powerSaveManager: PowerSaveManager
-
-    private val pathGuideManager = PathGuideManager()
+    private lateinit var fusedLocationClient: FusedLocationProviderClient
 
     private var isDetectionActive = true
     private var isPowerSaveMode = false
@@ -76,10 +80,10 @@ class MainActivity : AppCompatActivity() {
     ) { result ->
         if (result.resultCode == RESULT_OK) {
             val matches = result.data?.getStringArrayListExtra(RecognizerIntent.EXTRA_RESULTS)
-            val spokenText = matches?.firstOrNull()?.lowercase() ?: ""
+            val spokenText = matches?.firstOrNull()?.trim() ?: ""
             Log.d(TAG, "인식된 목적지: $spokenText")
             if (spokenText.isNotBlank()) {
-                handleSpokenDestination(spokenText)
+                searchRouteFromCurrentLocation(spokenText)
             }
         }
     }
@@ -97,12 +101,13 @@ class MainActivity : AppCompatActivity() {
         feedbackManager = FeedbackManager(this)
         videoAnalyzer = VideoAnalyzer(this, yoloDetector)
         cameraExecutor = Executors.newSingleThreadExecutor()
+        fusedLocationClient = LocationServices.getFusedLocationProviderClient(this)
 
         voiceCommandManager = VoiceCommandManager(this) { command ->
             when (command) {
                 VoiceCommandManager.Command.START -> {
                     isDetectionActive = true
-                    feedbackManager.speak("보행 안내를 시작합니다.", FeedbackManager.SpeechPriority.HIGH  )
+                    feedbackManager.speak("보행 안내를 시작합니다.", FeedbackManager.SpeechPriority.HIGH)
                 }
 
                 VoiceCommandManager.Command.PAUSE -> {
@@ -218,11 +223,6 @@ class MainActivity : AppCompatActivity() {
                             val viewHeight = binding.viewFinder.height
 
                             feedbackManager.processDetections(results, viewWidth, viewHeight)
-
-                            val guidance = pathGuideManager.evaluatePathAlignment(results, viewWidth)
-                            if (guidance.message.isNotBlank()) {
-                                feedbackManager.speak(guidance.message)
-                            }
                         }
 
                         imageProxy.close()
@@ -255,38 +255,73 @@ class MainActivity : AppCompatActivity() {
         }
     }
 
-    private fun handleSpokenDestination(destinationText: String) {
-        feedbackManager.speak("${destinationText}로 경로를 검색합니다.")
-
-        val (endLat, endLng) = when {
-            destinationText.contains("도서관") -> Pair(37.5560, 126.9720)
-            destinationText.contains("정문") -> Pair(37.5550, 126.9700)
-            else -> {
-                feedbackManager.speak("등록되지 않은 목적지입니다. 다시 시도해 주세요.")
-                return
-            }
+    private fun searchRouteFromCurrentLocation(destinationText: String) {
+        if (
+            ActivityCompat.checkSelfPermission(this, Manifest.permission.ACCESS_FINE_LOCATION) != PackageManager.PERMISSION_GRANTED &&
+            ActivityCompat.checkSelfPermission(this, Manifest.permission.ACCESS_COARSE_LOCATION) != PackageManager.PERMISSION_GRANTED
+        ) {
+            feedbackManager.speak("위치 권한이 필요합니다.", FeedbackManager.SpeechPriority.NORMAL)
+            return
         }
 
-        val startLat = 37.5665
-        val startLng = 126.9780
+        feedbackManager.speak("${destinationText}로 경로를 검색합니다.", FeedbackManager.SpeechPriority.NORMAL)
 
-        TMapClient.requestRoute(startLng, startLat, endLng, endLat) { response ->
-            if (response != null) {
-                val firstFeature = response.features?.firstOrNull()
-                val distance = firstFeature?.properties?.totalDistance ?: 0
-                val time = firstFeature?.properties?.totalTime ?: 0
-
-                val message = String.format(
-                    Locale.KOREAN,
-                    "목적지까지 총 거리 %d미터, 예상 소요 시간 %d분입니다.",
-                    distance,
-                    time / 60
-                )
-                feedbackManager.speak(message, FeedbackManager.SpeechPriority.HIGH)
+        fusedLocationClient.lastLocation.addOnSuccessListener { lastLoc ->
+            if (lastLoc != null) {
+                requestPoiAndRoute(destinationText, lastLoc.latitude, lastLoc.longitude)
             } else {
-                feedbackManager.speak("경로를 불러오는 데 실패했습니다.")
+                val tokenSource = CancellationTokenSource()
+                fusedLocationClient.getCurrentLocation(
+                    Priority.PRIORITY_HIGH_ACCURACY,
+                    tokenSource.token
+                ).addOnSuccessListener { currentLoc ->
+                    if (currentLoc != null) {
+                        requestPoiAndRoute(destinationText, currentLoc.latitude, currentLoc.longitude)
+                    } else {
+                        feedbackManager.speak("현재 위치를 가져올 수 없습니다.", FeedbackManager.SpeechPriority.NORMAL)
+                    }
+                }.addOnFailureListener { e ->
+                    Log.e(TAG, "현재 위치 조회 실패", e)
+                    feedbackManager.speak("현재 위치를 가져올 수 없습니다.", FeedbackManager.SpeechPriority.NORMAL)
+                }
             }
+        }.addOnFailureListener { e ->
+            Log.e(TAG, "마지막 위치 조회 실패", e)
+            feedbackManager.speak("위치 정보를 불러오는 중 오류가 발생했습니다.", FeedbackManager.SpeechPriority.NORMAL)
         }
+    }
+
+    private fun requestPoiAndRoute(
+        destinationText: String,
+        startLat: Double,
+        startLng: Double
+    ) {
+        TMapClient.searchDestinationAndRoute(
+            keyword = destinationText,
+            startLat = startLat,
+            startLng = startLng,
+            onDestinationNotFound = {
+                feedbackManager.speak("검색된 목적지가 없습니다. 다시 말씀해 주세요.", FeedbackManager.SpeechPriority.NORMAL)
+            },
+            onResult = { placeName, routeResponse ->
+                if (routeResponse != null) {
+                    val firstFeature = routeResponse.features?.firstOrNull()
+                    val distance = firstFeature?.properties?.totalDistance ?: 0
+                    val time = firstFeature?.properties?.totalTime ?: 0
+
+                    val message = String.format(
+                        Locale.KOREAN,
+                        "%s까지 총 거리 %d미터, 예상 소요 시간 %d분입니다.",
+                        placeName ?: destinationText,
+                        distance,
+                        time / 60
+                    )
+                    feedbackManager.speak(message, FeedbackManager.SpeechPriority.NORMAL)
+                } else {
+                    feedbackManager.speak("경로를 불러오는 데 실패했습니다.", FeedbackManager.SpeechPriority.NORMAL)
+                }
+            }
+        )
     }
 
     fun openVideoPicker() {

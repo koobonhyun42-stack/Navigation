@@ -48,4 +48,53 @@ object TMapClient {
             }
         }
     }
+
+    fun searchDestinationAndRoute(
+        keyword: String,
+        startLat: Double,
+        startLng: Double,
+        onDestinationNotFound: () -> Unit,
+        onResult: (placeName: String?, routeResponse: TMapRouteResponse?) -> Unit
+    ) {
+        GlobalScope.launch(Dispatchers.IO) {
+            try {
+                val poiResponse = tmapService.searchPois(
+                appKey = TMAP_APP_KEY,
+                searchKeyword = keyword,
+                centerLat = startLat,
+                centerLon = startLng
+                )
+                val firstPoi = poiResponse.searchPoiInfo?.pois?.poi?.firstOrNull {
+                    it.getLatitude() != null && it.getLongitude() != null
+                }
+
+                val endLat = firstPoi?.getLatitude()
+                val endLng = firstPoi?.getLongitude()
+
+                if (firstPoi == null || endLat == null || endLng == null) {
+                    withContext(Dispatchers.Main) {
+                        onDestinationNotFound()
+                    }
+                    return@launch
+                }
+
+                val routeResponse = tmapService.getPedestrianRoute(
+                    appKey = TMAP_APP_KEY,
+                    startX = startLng,
+                    startY = startLat,
+                    endX = endLng,
+                    endY = endLat
+                )
+
+                withContext(Dispatchers.Main) {
+                    onResult(firstPoi.name ?: keyword, routeResponse)
+                }
+            } catch (e: Exception) {
+                withContext(Dispatchers.Main) {
+                    Log.e(TAG, "POI 검색 또는 경로 요청 실패: ${e.localizedMessage}")
+                    onResult(null, null)
+                }
+            }
+        }
+    }
 }

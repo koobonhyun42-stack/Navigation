@@ -122,7 +122,7 @@ class YoloDetector(
         if (boxHeightPx <= 0f) return -1f
 
         val realObjectHeightMeter = when (box.clsName.lowercase(Locale.ROOT)) {
-            "braillebrailleblock-detect", "점자블록" -> 0.3f
+            "braillebrailleblock-detect", "점자블록" -> 0.15f
             "bike", "자전거" -> 1.0f
             "crosswalk", "횡단보도" -> 0.1f
             "hazard-sign", "위험표지판" -> 0.8f
